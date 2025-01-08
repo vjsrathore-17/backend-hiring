@@ -1,5 +1,4 @@
-from django.db import models
-
+from django.db import models # type: ignore
 
 # Create your models here.
 class Site(models.Model):
@@ -19,6 +18,13 @@ class Site(models.Model):
     description = models.TextField()
     record_capicity = models.IntegerField(choices=RECORD_CAPACITY_CHOICES)
 
+class JobType(models.Model):
+    name = models.CharField(max_length=100)
+    execution_time = models.IntegerField()  # in seconds
+
+class CustomerType(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
 
 # you can choose to reuse the User model from django.contrib.auth.models
 class UserRecords(models.Model):
@@ -33,3 +39,20 @@ class UserRecords(models.Model):
     pincode = models.CharField(max_length=10)
     dob = models.DateField
     is_active = models.BooleanField(default=True)  # do not count for active records if false
+    customer_type = models.ForeignKey(CustomerType, on_delete=models.CASCADE,default=1)
+
+class Job(models.Model):
+    job_type = models.ForeignKey(JobType, on_delete=models.CASCADE)
+    customer = models.ForeignKey(UserRecords, on_delete=models.CASCADE)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('PENDING', 'Pending'),
+            ('RUNNING', 'Running'),
+            ('COMPLETED', 'Completed'),
+            ('FAILED', 'Failed')
+        ],
+        default='PENDING'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

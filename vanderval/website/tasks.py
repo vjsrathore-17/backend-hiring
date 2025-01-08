@@ -1,57 +1,27 @@
 import logging
 from time import sleep
-
-from .models import Site, UserRecords
+from celery import Celery # type: ignore
+from django.conf import settings # type: ignore
+from .models import Site, UserRecords, JobType, Job
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+app = Celery('tasks', broker=settings.CELERY_BROKER_URL)
 
-def task_01(site_id: int):
-    TIME_MULTIPLIER = 0.001 # very fast execution per record
-    site = Site.objects.get(id=site_id)
-    records = UserRecords.objects.filter(site=site)
-    for record in records:
-        sleep(TIME_MULTIPLIER)
-        logger.info("Task 01: {} processed".format(record.name))
-    return True
-
-
-def task_02(site_id: int):
-    TIME_MULTIPLIER = 0.01
-    site = Site.objects.get(id=site_id)
-    records = UserRecords.objects.filter(site=site)
-    for record in records:
-        sleep(TIME_MULTIPLIER)
-        logger.info("Task 02: {} processed".format(record.name))
-    return True
-
-
-def task_03(site_id: int):
-    TIME_MULTIPLIER = 0.1
-    site = Site.objects.get(id=site_id)
-    records = UserRecords.objects.filter(site=site)
-    for record in records:
-        sleep(TIME_MULTIPLIER)
-        logger.info("Task 03: {} processed".format(record.name))
-    return True
-
-
-def task_04(site_id: int):
-    TIME_MULTIPLIER = 1
-    site = Site.objects.get(id=site_id)
-    records = UserRecords.objects.filter(site=site)
-    for record in records:
-        sleep(TIME_MULTIPLIER)
-        logger.info("Task 04: {} processed".format(record.name))
-    return True
-
-
-def task_05(site_id: int):
-    TIME_MULTIPLIER = 10
-    site = Site.objects.get(id=site_id)
-    records = UserRecords.objects.filter(site=site)
-    for record in records:
-        sleep(TIME_MULTIPLIER)
-        logger.info("Task 05: {} processed".format(record.name))
-    return True
+@app.task
+def process_job(job_id):
+    job = Job.objects.get(id=job_id)
+    try:
+        job.status = 'RUNNING'
+        job.save()
+        
+        # Simulate job execution
+        sleep(job.job_type.execution_time)
+        
+        job.status = 'COMPLETED'
+        job.save()
+    except Exception as e:
+        job.status = 'FAILED'
+        job.save()
+        raise e

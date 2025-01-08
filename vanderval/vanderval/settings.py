@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
     "website",
 ]
 
@@ -70,7 +71,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "vanderval.wsgi.application"
 
-
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TASK_SERIALIZER = "json"
+CELERY_TIMEZONE = "UTC"
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
